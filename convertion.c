@@ -1,87 +1,99 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include<math.h>
+#include <math.h>
 
 #define NBCHIFFRES 500
 
-int decimalbinaire(double nbDecimal, int nombreBinaire[] ) {
-    int reste ;
+void decimalVersBinaire(double nbDecimal, int tabDecimal[]) {
+    int reste;
     int indice = 0;
-
+    
 
     while (nbDecimal != 0) {
         reste = (int)nbDecimal % 2;
-        nombreBinaire[indice] = reste;
-        indice ++;
-        nbDecimal = (int)nbDecimal /2;
+        tabDecimal[indice] = reste;
+        indice++;
+        nbDecimal = (int)nbDecimal / 2;
     }
-    return indice;
+
+    printf("\033[1;32mLe résultat en binaire = ");
+
+    for (int i = indice - 1; i >= 0; i--) {
+        printf("%d", tabDecimal[i]);
+    }
+    printf("\033[0m\n");
 }
 
-void binairedecimal(long double nbBinaire) {
-    int nbDecimal = 0;
-    int indice = 0, reste;
-    double apresVirgule = nbBinaire - (int)nbBinaire;
+double binaireVersDecimal(char *tabBinaire) {
+    int indice = 0;
+    int partieEntiere = 0;
+    double partieFractionnaire = 0.0;
+    int estPartieEntiere = 1;
 
-    // Avant la virgule
-    while ((int)nbBinaire != 0) {
-        reste = (int)nbBinaire % 10;
-        nbBinaire /= 10;
-        nbDecimal += reste * (1 << indice); // Utiliser << pour la puissance de 2
-        ++indice;
+    // Convertir la partie entière
+    while (tabBinaire[indice] != '\0' && tabBinaire[indice] != '.') {
+        partieEntiere = partieEntiere * 2 + (tabBinaire[indice] - '0');
+        indice++;
     }
 
-    // Après la virgule
-    double decimalFraction = 0.0;
-    int base = 2;
-    int i = -1;  
-    while (apresVirgule > 0.000000001 && i >= -10) {
-        int digit = (int)(apresVirgule * 10);
-        apresVirgule = apresVirgule * 10 - digit;
-        decimalFraction += digit * pow(base, i);
-        --i;
+    // Si on rencontre une virgule, passer à la partie fractionnaire
+    if (tabBinaire[indice] == '.') {
+        estPartieEntiere = 0;
+        indice++;
     }
 
-    // Affichage du résultat
-    printf("%d,%f\n", nbDecimal, decimalFraction);
+    // Convertir la partie fractionnaire
+    double poidsFractionnaire = 0.5;
+    while (tabBinaire[indice] != '\0') {
+        partieFractionnaire += (tabBinaire[indice] - '0') * poidsFractionnaire;
+        poidsFractionnaire /= 2.0;
+        indice++;
+    }
+
+    // Calculer le résultat final
+    double resultat = partieEntiere + partieFractionnaire;
+
+    // Appliquer le signe négatif si nécessaire
+    if (tabBinaire[0] == '-') {
+        resultat = -resultat;
+    }
+
+    printf("\033[1;32mLe nombre en décimal est : %.20f\n\033[0m", resultat);
 }
 
 int main(void) {
     double nbDecimal;
-    long double binaire;
     char operation;
-    int nbChiffresBinaires;
-    int nombreBinaire[NBCHIFFRES];
+    int tabDecimal[NBCHIFFRES];
+    char tabBinaire[NBCHIFFRES];
+
     printf("\033[1;34mBinaire = b \nDecimal = d\033[0m \n\033[1;31mPour sortir = e  \033[0m\nQuelle opération : ");
     scanf(" %c", &operation);
+
+    int couleurErreur = 31; // Code de couleur pour les messages d'erreur (rouge)
 
     while (operation != 'e') {
         switch (operation) {
             case 'd':
                 printf("Nombre décimal : ");
                 scanf("%lf", &nbDecimal);
-                nbChiffresBinaires = decimalbinaire(nbDecimal, nombreBinaire);
-                printf("Le résultat de %.0f en binaire = ", nbDecimal);
-                for (int i = nbChiffresBinaires -1; i>= 0; i--)
-                {
-                    printf("%d", nombreBinaire[i]);
-                }
-                printf("\n");
-                
+                decimalVersBinaire(nbDecimal, tabDecimal);
                 break;
 
             case 'b':
-                printf("Nombre binaire : ");
-                scanf("%Lf", &binaire);
-                binairedecimal(binaire);
+                printf("Entrez un nombre binaire : ");
+                scanf("%s", tabBinaire);
+                binaireVersDecimal(tabBinaire);
                 break;
 
             case 'e':
-                printf("Au revoir.\n");
+                printf("\033[1;32mAu revoir.\033[0m\n");
                 break;
 
             default:
-                printf("Opération invalide.\n");
+                // Changement de couleur cyclique pour l'effet arc-en-ciel des messages d'erreur
+                couleurErreur = (couleurErreur + 1) % 8 + 31;
+                printf("\033[1;%dmOpération invalide.\033[0m\n", couleurErreur);
                 break;
         }
 
